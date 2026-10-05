@@ -232,14 +232,21 @@
     resize(); addEventListener('resize', resize);
     const P = Array.from({ length: innerWidth < 600 ? 14 : 22 }, () => mk(true));
     function mk(init) {
-      return { x: Math.random() * W, y: init ? Math.random() * H : -20 * dpr, r: (4 + Math.random() * 5) * dpr,
-        vy: (0.5 + Math.random() * 0.3) * dpr, vx: (Math.random() - 0.3) * 0.25 * dpr,
-        a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.015, sw: Math.random() * 6.28, o: 0.35 + Math.random() * 0.4 };
-    }
-    const draw = () => {
-      ctx.clearRect(0, 0, W, H);
-      for (const p of P) {
-        p.sw += 0.008; p.y += p.vy; p.x += p.vx + Math.sin(p.sw) * 0.3 * dpr; p.a += p.va;
+        return { x: Math.random() * W, y: init ? Math.random() * H : -20 * dpr, r: (4 + Math.random() * 5) * dpr,
+          // vy: 0.18 -> 1.0, 0.3 -> 1.5 정도로 대폭 상향 (기본 낙하 속도 증가)
+          vy: (1.0 + Math.random() * 1.5) * dpr, 
+          // vx: 0.25 -> 1.0 정도로 상향 (좌우 이동폭 증가)
+          vx: (Math.random() - 0.5) * 1.0 * dpr,
+          a: Math.random() * 6.28, 
+          // va: 0.015 -> 0.05 로 상향 (회전 속도 증가)
+          va: (Math.random() - 0.5) * 0.05, 
+          sw: Math.random() * 6.28, o: 0.35 + Math.random() * 0.4 };
+      }
+      const draw = () => {
+        ctx.clearRect(0, 0, W, H);
+        for (const p of P) {
+          // p.sw: 0.008 -> 0.02 로 상향 (팔랑거리는 속도 증가)
+          p.sw += 0.02;
         if (p.y > H + 20 * dpr) Object.assign(p, mk(false));
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.globalAlpha = p.o;
         ctx.fillStyle = '#f0c9c2';

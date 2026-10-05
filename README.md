@@ -7,10 +7,10 @@ GitHub Pages용 정적 사이트입니다. 빌드 과정 없이 파일을 올리
 |---|---|
 | `index.html` / `style.css` / `script.js` | 청첩장 페이지 |
 | `config.js` | **이름·날짜·장소·인사말·계좌 등 내용은 여기서만 수정** |
-| `images/main.jpg` | 메인(커버) 사진 |
-| `images/gallery/01~19.jpg` | 갤러리 원본(1600px) · `images/thumb/` 썸네일 |
-| `images/og.jpg` | 카카오톡/문자 공유 시 미리보기 이미지 |
-| `admin.html` | 참석 응답 통계 페이지 (비밀번호 필요) |
+| `images/` | **모든 사진을 이 폴더 하나에서 관리** (가로·세로 최대 1600px) |
+| `images/photos.json` | 갤러리 순서와 메인(커버) 사진 지정 |
+| `images/og.jpg` | 카카오톡/문자 공유 미리보기 이미지 (메인 사진에서 자동 생성) |
+| `admin.html` | 관리 페이지 — 사진 업로드/삭제/순서/메인 지정, 참석 응답 통계 |
 | `apps-script/Code.gs` | 응답을 구글 시트에 저장하는 스크립트 |
 
 ## 1. GitHub Pages 배포
@@ -38,6 +38,18 @@ GitHub Pages용 정적 사이트입니다. 빌드 과정 없이 파일을 올리
 
 > Code.gs를 수정했다면 **배포 → 배포 관리 → 수정(연필) → 버전: 새 버전**으로 다시 배포해야 반영됩니다.
 
-## 3. 사진 교체
-같은 이름(`01.jpg`…)으로 덮어쓰면 됩니다. 장수가 바뀌면 `config.js`의 `galleryCount`도 수정하세요.
-가로 1600px 이하, JPG 품질 80 정도면 충분합니다.
+## 3. 사진 관리 (업로드하면 저장소에 바로 반영)
+`https://soboo.github.io/marry/admin.html` → **사진 관리** 탭
+
+1. 최초 1회: GitHub **Fine-grained 토큰** 만들기
+   - GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token
+   - Repository access: Only select repositories → `marry`
+   - Permissions → Repository permissions → **Contents: Read and write**
+   - 만료일은 결혼식 이후로
+2. 토큰을 붙여넣고 **연결**
+3. **＋ 사진 추가**(여러 장 가능) · ★ 메인 지정 · ◀ ▶ 순서 · 🗑 삭제
+4. **저장하고 반영하기** → 저장소에 커밋 1개로 올라가고, 1~2분 뒤 청첩장에 반영
+
+- 사진은 브라우저에서 자동으로 1600px JPEG로 줄인 뒤 올라갑니다 (휴대폰 사진 회전도 자동 보정).
+- 메인 사진을 바꾸면 카카오톡 미리보기용 `og.jpg`도 자동으로 다시 만들어집니다.
+- 토큰은 저장소에 저장되지 않고 그 브라우저에만 남습니다. 공용 PC에서는 '기억하기'를 끄고, 다 쓰면 '연결 해제'를 눌러주세요.

@@ -62,62 +62,71 @@
   };
   tick(); setInterval(tick, 1000);
 
-  /* ---------- 갤러리 + 라이트박스 ---------- */
-  const N = C.galleryCount;
-  const SHOW = 9;
-  const grid = $('#gallery');
-  const src = i => `images/gallery/${pad(i)}.jpg`;
-  const thumb = i => `images/thumb/${pad(i)}.jpg`;
-  grid.innerHTML = Array.from({ length: N }, (_, k) =>
-    `<button class="${k >= SHOW ? 'hide' : ''}" data-i="${k}" aria-label="사진 ${k + 1} 크게 보기">
-       <img src="${thumb(k + 1)}" alt="" loading="lazy" decoding="async"></button>`).join('');
-  $$('img', grid).forEach(img => {
-    if (img.complete) img.classList.add('loaded');
-    else img.addEventListener('load', () => img.classList.add('loaded'));
-  });
-  const more = $('#moreBtn');
-  if (N <= SHOW) more.remove();
-  more?.addEventListener('click', () => {
-    $$('.hide', grid).forEach((b, k) => { b.classList.remove('hide'); b.classList.add('pop'); b.style.animationDelay = `${k * 40}ms`; });
-    more.remove();
-  });
+  /* ---------- 커버 + 갤러리 + 라이트박스 ---------- */
+  const IMG = f => `images/${f}`;
+  const cover = $('#coverImg');
+  cover.addEventListener('load', () => cover.classList.add('ready'));
+  fetch('images/photos.json', { cache: 'no-cache' })
+    .then(r => r.json())
+    .catch(() => ({ cover: '01.jpg', photos: [] }))
+    .then(({ cover: c, photos }) => {
+      cover.src = IMG(c || photos[0]);
+      initGallery(photos || []);
+    });
 
-  const lb = $('#lightbox'), track = $('#lbTrack'), count = $('#lbCount');
-  track.innerHTML = Array.from({ length: N }, (_, k) => `<figure><img data-src="${src(k + 1)}" alt="사진 ${k + 1}"></figure>`).join('');
-  let cur = 0;
-  const load = i => { const im = track.children[i]?.querySelector('img'); if (im && !im.src) im.src = im.dataset.src; };
-  const go = (i, anim = true) => {
-    cur = (i + N) % N;
-    [cur - 1, cur, cur + 1].forEach(j => load((j + N) % N));
-    track.style.transition = anim ? '' : 'none';
-    track.style.transform = `translateX(${-cur * 100}%)`;
-    count.textContent = `${cur + 1} / ${N}`;
-  };
-  const openLb = i => { lb.hidden = false; document.body.style.overflow = 'hidden'; go(i, false); };
-  const closeLb = () => { lb.hidden = true; document.body.style.overflow = ''; };
-  grid.addEventListener('click', e => { const b = e.target.closest('button'); if (b) openLb(+b.dataset.i); });
-  $('.lb-close', lb).onclick = closeLb;
-  $('.lb-nav.prev', lb).onclick = () => go(cur - 1);
-  $('.lb-nav.next', lb).onclick = () => go(cur + 1);
-  document.addEventListener('keydown', e => {
-    if (lb.hidden) return;
-    if (e.key === 'Escape') closeLb();
-    if (e.key === 'ArrowLeft') go(cur - 1);
-    if (e.key === 'ArrowRight') go(cur + 1);
-  });
-  // 스와이프
-  let sx = 0, sy = 0, dx = 0, drag = false;
-  lb.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; drag = true; track.style.transition = 'none'; }, { passive: true });
-  lb.addEventListener('touchmove', e => {
-    if (!drag) return;
-    dx = e.touches[0].clientX - sx;
-    if (Math.abs(e.touches[0].clientY - sy) > Math.abs(dx)) return;
-    track.style.transform = `translateX(calc(${-cur * 100}% + ${dx}px))`;
-  }, { passive: true });
-  lb.addEventListener('touchend', () => {
-    drag = false;
-    if (dx > 50) go(cur - 1); else if (dx < -50) go(cur + 1); else go(cur);
-  });
+  function initGallery(list) {
+    const N = list.length, SHOW = 9;
+    const grid = $('#gallery'), more = $('#moreBtn');
+    if (!N) { $('.gallery').remove(); return; }
+    grid.innerHTML = list.map((f, k) =>
+      `<button class="${k >= SHOW ? 'hide' : ''}" data-i="${k}" aria-label="사진 ${k + 1} 크게 보기">
+         <img src="${IMG(f)}" alt="" loading="lazy" decoding="async"></button>`).join('');
+    $$('img', grid).forEach(img => {
+      if (img.complete) img.classList.add('loaded');
+      else img.addEventListener('load', () => img.classList.add('loaded'));
+    });
+    if (N <= SHOW) more.remove();
+    else more.addEventListener('click', () => {
+      $$('.hide', grid).forEach((b, k) => { b.classList.remove('hide'); b.classList.add('pop'); b.style.animationDelay = `${k * 40}ms`; });
+      more.remove();
+    });
+
+    const lb = $('#lightbox'), track = $('#lbTrack'), count = $('#lbCount');
+    track.innerHTML = list.map((f, k) => `<figure><img data-src="${IMG(f)}" alt="사진 ${k + 1}"></figure>`).join('');
+    let cur = 0;
+    const load = i => { const im = track.children[i]?.querySelector('img'); if (im && !im.src) im.src = im.dataset.src; };
+    const go = (i, anim = true) => {
+      cur = (i + N) % N;
+      [cur - 1, cur, cur + 1].forEach(j => load((j + N) % N));
+      track.style.transition = anim ? '' : 'none';
+      track.style.transform = `translateX(${-cur * 100}%)`;
+      count.textContent = `${cur + 1} / ${N}`;
+    };
+    const openLb = i => { lb.hidden = false; document.body.style.overflow = 'hidden'; go(i, false); };
+    const closeLb = () => { lb.hidden = true; document.body.style.overflow = ''; };
+    grid.addEventListener('click', e => { const b = e.target.closest('button'); if (b) openLb(+b.dataset.i); });
+    $('.lb-close', lb).onclick = closeLb;
+    $('.lb-nav.prev', lb).onclick = () => go(cur - 1);
+    $('.lb-nav.next', lb).onclick = () => go(cur + 1);
+    document.addEventListener('keydown', e => {
+      if (lb.hidden) return;
+      if (e.key === 'Escape') closeLb();
+      if (e.key === 'ArrowLeft') go(cur - 1);
+      if (e.key === 'ArrowRight') go(cur + 1);
+    });
+    let sx = 0, sy = 0, dx = 0, drag = false;
+    lb.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; drag = true; track.style.transition = 'none'; }, { passive: true });
+    lb.addEventListener('touchmove', e => {
+      if (!drag) return;
+      dx = e.touches[0].clientX - sx;
+      if (Math.abs(e.touches[0].clientY - sy) > Math.abs(dx)) return;
+      track.style.transform = `translateX(calc(${-cur * 100}% + ${dx}px))`;
+    }, { passive: true });
+    lb.addEventListener('touchend', () => {
+      drag = false;
+      if (dx > 50) go(cur - 1); else if (dx < -50) go(cur + 1); else go(cur);
+    });
+  }
 
   /* ---------- 지도 / 교통 ---------- */
   const q = encodeURIComponent(C.venue.mapQuery || C.venue.name);

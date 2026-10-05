@@ -41,12 +41,12 @@ window.WEDDING = {
   // 마음 전하실 곳 — 나중에 수정
   accounts: {
     groom: [
-      { role: '신랑', name: '김한용', bank: '은행명', number: '000-0000-0000-00' },
+      { role: '신랑', name: '김한용', bank: '우리은행', number: '1002-561-589062' },
       { role: '신랑 아버지', name: '', bank: '', number: '' },
       { role: '신랑 어머니', name: '', bank: '', number: '' }
     ],
     bride: [
-      { role: '신부', name: '배지영', bank: '은행명', number: '000-0000-0000-00' },
+      { role: '신부', name: '배지영', bank: '우리은행', number: '1002-466-437760' },
       { role: '신부 아버지', name: '', bank: '', number: '' },
       { role: '신부 어머니', name: '', bank: '', number: '' }
     ]

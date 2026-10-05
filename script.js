@@ -121,13 +121,10 @@
 
   /* ---------- 지도 / 교통 ---------- */
   const q = encodeURIComponent(C.venue.mapQuery || C.venue.name);
-  $('#naverMap').href = `https://map.naver.com/p/search/${q}`; // 휴대폰에선 네이버 지도 앱/모바일웹으로 연결
+  $('#naverMap').href = `https://map.naver.com/p/search/${q}`;
   $('#kakaoMap').href = `https://map.kakao.com/link/search/${q}`;
-  $('#tmap').href = `tmap://search?name=${q}`;
-  $('#tmap').addEventListener('click', e => {
-    if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) { e.preventDefault(); toast('티맵은 휴대폰에서 열 수 있어요'); }
-  });
-  $('#transport').innerHTML = C.venue.transport.map(t => `<div><dt>${esc(t.title)}</dt><dd>${esc(t.body).replace(/\n/g, '<br>')}</dd></div>`).join('');
+  $('#tmap').href = `tmap://search?name=${q}`; // 티맵 앱이 설치된 휴대폰에서 열립니다
+  $('#transport').innerHTML = C.venue.transport.map(t => `<div><dt>${esc(t.title)}</dt><dd>${esc(t.body)}</dd></div>`).join('');
 
   /* ---------- 계좌 ---------- */
   const accBlock = (el, title, list) => {
@@ -163,10 +160,9 @@
     if (b) copy(b.dataset.copy ?? binds[b.dataset.copyBind]);
   });
   $('#shareBtn').onclick = async () => {
-    const url = C.shareUrl || location.href;
-    const data = { title: document.title, text: binds.dateLong, url };
+    const data = { title: document.title, text: binds.dateLong, url: location.href };
     if (navigator.share) { try { await navigator.share(data); } catch {} }
-    else copy(url);
+    else copy(location.href);
   };
 
   /* ---------- 스크롤 등장 효과 ---------- */
@@ -231,45 +227,19 @@
     const resize = () => { dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr; };
     resize(); addEventListener('resize', resize);
     const P = Array.from({ length: innerWidth < 600 ? 14 : 22 }, () => mk(true));
-    
     function mk(init) {
-      return { 
-        x: Math.random() * W, 
-        y: init ? Math.random() * H : -20 * dpr, 
-        r: (4 + Math.random() * 5) * dpr,
-        // 1. 낙하 속도 대폭 상향 (기본 0.18 -> 2.5 ~ 4.5 수준으로 대폭 증가)
-        vy: (2.5 + Math.random() * 2.0) * dpr, 
-        // 2. 좌우 이동 속도 증가
-        vx: (Math.random() - 0.5) * 1.5 * dpr,
-        a: Math.random() * 6.28, 
-        // 3. 회전 속도 증가
-        va: (Math.random() - 0.5) * 0.08, 
-        sw: Math.random() * 6.28, 
-        o: 0.35 + Math.random() * 0.4 
-      };
+      return { x: Math.random() * W, y: init ? Math.random() * H : -20 * dpr, r: (4 + Math.random() * 5) * dpr,
+        vy: (0.35 + Math.random() * 0.6) * dpr, vx: (Math.random() - 0.3) * 0.5 * dpr,
+        a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.03, sw: Math.random() * 6.28, o: 0.35 + Math.random() * 0.4 };
     }
-    
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
       for (const p of P) {
-        // 4. 팔랑거리는 주기 상향
-        p.sw += 0.04; 
-        
-        // ★ 중요: 질문자님 코드에서 누락되었던 위치 이동 계산식 복구 및 적용 ★
-        p.y += p.vy; 
-        p.x += p.vx + Math.sin(p.sw) * 0.8 * dpr; // 좌우 흔들림 폭(0.8) 상향
-        p.a += p.va;
-        
+        p.sw += 0.012; p.y += p.vy; p.x += p.vx + Math.sin(p.sw) * 0.4 * dpr; p.a += p.va;
         if (p.y > H + 20 * dpr) Object.assign(p, mk(false));
-        
-        ctx.save(); 
-        ctx.translate(p.x, p.y); 
-        ctx.rotate(p.a); 
-        ctx.globalAlpha = p.o;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.globalAlpha = p.o;
         ctx.fillStyle = '#f0c9c2';
-        ctx.beginPath(); 
-        ctx.ellipse(0, 0, p.r, p.r * 0.62, 0, 0, Math.PI * 2); 
-        ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0, 0, p.r, p.r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
       if (!document.hidden) requestAnimationFrame(draw);

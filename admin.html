@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>참석 응답 현황</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f7f3ee;--paper:#fff;--ink:#3b3330;--muted:#8a7f78;--line:#e6ddd3;--accent:#b98b82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:'Gowun Batang',serif;padding:24px 16px 60px;word-break:keep-all}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{font-weight:400;font-size:22px;margin-bottom:18px}
+  form{display:flex;gap:8px;margin-bottom:22px}
+  input{flex:1;min-width:0;font:inherit;font-size:16px;padding:10px 14px;border:1px solid var(--line);border-radius:10px}
+  button{font:inherit;padding:10px 18px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+  .tile{background:var(--paper);border-radius:12px;padding:14px;border:1px solid var(--line)}
+  .tile small{color:var(--muted);font-size:12px;display:block}
+  .tile b{font-size:26px;font-weight:700}
+  .tile span{font-size:13px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;background:var(--paper);border-radius:12px;overflow:hidden;font-size:14px;margin-top:18px}
+  th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f3e6e3;font-weight:400;font-size:13px}
+  td.n{text-align:right;white-space:nowrap}
+  .no{color:var(--muted)}
+  .msg{color:var(--muted);font-size:12px}
+  .err{color:#c0504a;margin:8px 0}
+  @media (max-width:480px){.tiles{grid-template-columns:1fr 1fr}.tile.total{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>참석 응답 현황</h1>
+  <form id="f"><input id="key" type="password" placeholder="관리자 비밀번호" autocomplete="current-password"><button>조회</button></form>
+  <p class="err" id="err"></p>
+  <div id="out"></div>
+</div>
+<script src="config.js"></script>
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+document.getElementById('f').onsubmit = async e => {
+  e.preventDefault();
+  const err = document.getElementById('err'), out = document.getElementById('out');
+  err.textContent = ''; out.innerHTML = '불러오는 중...';
+  if (!WEDDING.rsvpEndpoint) { out.innerHTML = ''; err.textContent = 'config.js에 rsvpEndpoint가 설정되지 않았습니다.'; return; }
+  try {
+    const r = await fetch(`${WEDDING.rsvpEndpoint}?key=${encodeURIComponent(document.getElementById('key').value)}`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error === 'unauthorized' ? '비밀번호가 틀렸습니다.' : d.error);
+    const g = d.stat['신랑측'], b = d.stat['신부측'];
+    const tile = (t, s, cls='') => `<div class="tile ${cls}"><small>${t}</small><b>${s.people}</b><span>명</span><br><span>참석 ${s.yes}건 · 불참 ${s.no}건</span></div>`;
+    const total = { people: g.people + b.people, yes: g.yes + b.yes, no: g.no + b.no };
+    out.innerHTML = `<div class="tiles">${tile('신랑측', g)}${tile('신부측', b)}${tile('전체 예상 인원', total, 'total')}</div>
+      <table><thead><tr><th>구분</th><th>성함</th><th>참석</th><th class="n">인원</th></tr></thead><tbody>
+      ${d.list.map(x => `<tr class="${x.attend === '불참' ? 'no' : ''}"><td>${esc(x.side)}</td>
+        <td>${esc(x.name)}${x.message ? `<div class="msg">${esc(x.message)}</div>` : ''}</td>
+        <td>${esc(x.attend)}</td><td class="n">${esc(x.count)}</td></tr>`).join('') || '<tr><td colspan="4">아직 응답이 없습니다.</td></tr>'}
+      </tbody></table>`;
+  } catch (ex) { out.innerHTML = ''; err.textContent = ex.message || '불러오지 못했습니다.'; }
+};
+</script>
+</body>
+</html>

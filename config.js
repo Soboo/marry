@@ -7,21 +7,24 @@ window.WEDDING = {
   bride: { name: '배지영', father: '', mother: '', order: '딸' },   // TODO: 혼주 성함
 
   // 예식 일시 (24시간제)
-  date: { year: 2027, month: 2, day: 20, hour: 12, minute: 0 },   // TODO: 예식 시간 확인
+  date: { year: 2027, month: 2, day: 20, hour: 12, minute: 30 },
 
   venue: {
-    name: '예식장 이름',        // TODO
-    hall: '0층 OO홀',           // TODO
-    address: '서울특별시 OO구 OO로 00', // TODO
-    tel: '',                    // 예식장 전화번호 (선택)
-    // 지도 앱 검색어 (보통 예식장 이름)
-    mapQuery: '예식장 이름',    // TODO
+    name: '더루체웨딩홀',
+    hall: '5층 헤리티지홀',
+    address: '경기 안산시 단원구 중앙대로 829',
+    tel: '',
+    mapQuery: '안산 더루체웨딩홀',
     transport: [
-      { title: '지하철', body: 'O호선 OO역 O번 출구 도보 5분' },      // TODO
-      { title: '버스', body: '간선 000, 지선 0000 · OO 정류장 하차' }, // TODO
-      { title: '주차', body: '건물 내 주차장 이용 (2시간 무료)' }      // TODO
+      { title: '지하철', body: '4호선 · 수인분당선 고잔역 1번 출구 바로 앞 (도보 약 1분)' },
+      { title: '버스', body: '고잔역 인근 정류장 하차 후 도보 이동\n노선은 위 지도 앱의 길찾기를 이용해주세요.' },
+      { title: '자가용', body: '내비게이션에 "더루체웨딩홀" 또는 "중앙대로 829" 입력' },
+      { title: '주차', body: '건물 내 주차장 이용 · 하객 2시간 30분 무료\n(이후 30분당 600원)' }
     ]
   },
+
+  // 카카오톡·문자 공유 시 사용할 주소
+  shareUrl: 'https://soboo.github.io/marry/',
 
   // 인사말 — 원본 청첩장 문구로 교체하세요
   greeting: [

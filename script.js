@@ -121,10 +121,13 @@
 
   /* ---------- 지도 / 교통 ---------- */
   const q = encodeURIComponent(C.venue.mapQuery || C.venue.name);
-  $('#naverMap').href = `https://map.naver.com/p/search/${q}`;
+  $('#naverMap').href = `https://map.naver.com/p/search/${q}`; // 휴대폰에선 네이버 지도 앱/모바일웹으로 연결
   $('#kakaoMap').href = `https://map.kakao.com/link/search/${q}`;
-  $('#tmap').href = `tmap://search?name=${q}`; // 티맵 앱이 설치된 휴대폰에서 열립니다
-  $('#transport').innerHTML = C.venue.transport.map(t => `<div><dt>${esc(t.title)}</dt><dd>${esc(t.body)}</dd></div>`).join('');
+  $('#tmap').href = `tmap://search?name=${q}`;
+  $('#tmap').addEventListener('click', e => {
+    if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) { e.preventDefault(); toast('티맵은 휴대폰에서 열 수 있어요'); }
+  });
+  $('#transport').innerHTML = C.venue.transport.map(t => `<div><dt>${esc(t.title)}</dt><dd>${esc(t.body).replace(/\n/g, '<br>')}</dd></div>`).join('');
 
   /* ---------- 계좌 ---------- */
   const accBlock = (el, title, list) => {
@@ -160,9 +163,10 @@
     if (b) copy(b.dataset.copy ?? binds[b.dataset.copyBind]);
   });
   $('#shareBtn').onclick = async () => {
-    const data = { title: document.title, text: binds.dateLong, url: location.href };
+    const url = C.shareUrl || location.href;
+    const data = { title: document.title, text: binds.dateLong, url };
     if (navigator.share) { try { await navigator.share(data); } catch {} }
-    else copy(location.href);
+    else copy(url);
   };
 
   /* ---------- 스크롤 등장 효과 ---------- */
@@ -229,13 +233,13 @@
     const P = Array.from({ length: innerWidth < 600 ? 14 : 22 }, () => mk(true));
     function mk(init) {
       return { x: Math.random() * W, y: init ? Math.random() * H : -20 * dpr, r: (4 + Math.random() * 5) * dpr,
-        vy: (0.35 + Math.random() * 0.6) * dpr, vx: (Math.random() - 0.3) * 0.5 * dpr,
-        a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.03, sw: Math.random() * 6.28, o: 0.35 + Math.random() * 0.4 };
+        vy: (0.18 + Math.random() * 0.3) * dpr, vx: (Math.random() - 0.3) * 0.25 * dpr,
+        a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.015, sw: Math.random() * 6.28, o: 0.35 + Math.random() * 0.4 };
     }
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
       for (const p of P) {
-        p.sw += 0.012; p.y += p.vy; p.x += p.vx + Math.sin(p.sw) * 0.4 * dpr; p.a += p.va;
+        p.sw += 0.008; p.y += p.vy; p.x += p.vx + Math.sin(p.sw) * 0.3 * dpr; p.a += p.va;
         if (p.y > H + 20 * dpr) Object.assign(p, mk(false));
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.globalAlpha = p.o;
         ctx.fillStyle = '#f0c9c2';

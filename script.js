@@ -233,7 +233,7 @@
     const P = Array.from({ length: innerWidth < 600 ? 14 : 22 }, () => mk(true));
     function mk(init) {
       return { x: Math.random() * W, y: init ? Math.random() * H : -20 * dpr, r: (4 + Math.random() * 5) * dpr,
-        vy: (0.18 + Math.random() * 0.3) * dpr, vx: (Math.random() - 0.3) * 0.25 * dpr,
+        vy: (0.5 + Math.random() * 0.3) * dpr, vx: (Math.random() - 0.3) * 0.25 * dpr,
         a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.015, sw: Math.random() * 6.28, o: 0.35 + Math.random() * 0.4 };
     }
     const draw = () => {

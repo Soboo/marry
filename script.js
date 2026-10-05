@@ -231,26 +231,45 @@
     const resize = () => { dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr; };
     resize(); addEventListener('resize', resize);
     const P = Array.from({ length: innerWidth < 600 ? 14 : 22 }, () => mk(true));
+    
     function mk(init) {
-        return { x: Math.random() * W, y: init ? Math.random() * H : -20 * dpr, r: (4 + Math.random() * 5) * dpr,
-          // vy: 0.18 -> 1.0, 0.3 -> 1.5 정도로 대폭 상향 (기본 낙하 속도 증가)
-          vy: (1.0 + Math.random() * 1.5) * dpr, 
-          // vx: 0.25 -> 1.0 정도로 상향 (좌우 이동폭 증가)
-          vx: (Math.random() - 0.5) * 1.0 * dpr,
-          a: Math.random() * 6.28, 
-          // va: 0.015 -> 0.05 로 상향 (회전 속도 증가)
-          va: (Math.random() - 0.5) * 0.05, 
-          sw: Math.random() * 6.28, o: 0.35 + Math.random() * 0.4 };
-      }
-      const draw = () => {
-        ctx.clearRect(0, 0, W, H);
-        for (const p of P) {
-          // p.sw: 0.008 -> 0.02 로 상향 (팔랑거리는 속도 증가)
-          p.sw += 0.02;
+      return { 
+        x: Math.random() * W, 
+        y: init ? Math.random() * H : -20 * dpr, 
+        r: (4 + Math.random() * 5) * dpr,
+        // 1. 낙하 속도 대폭 상향 (기본 0.18 -> 2.5 ~ 4.5 수준으로 대폭 증가)
+        vy: (2.5 + Math.random() * 2.0) * dpr, 
+        // 2. 좌우 이동 속도 증가
+        vx: (Math.random() - 0.5) * 1.5 * dpr,
+        a: Math.random() * 6.28, 
+        // 3. 회전 속도 증가
+        va: (Math.random() - 0.5) * 0.08, 
+        sw: Math.random() * 6.28, 
+        o: 0.35 + Math.random() * 0.4 
+      };
+    }
+    
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of P) {
+        // 4. 팔랑거리는 주기 상향
+        p.sw += 0.04; 
+        
+        // ★ 중요: 질문자님 코드에서 누락되었던 위치 이동 계산식 복구 및 적용 ★
+        p.y += p.vy; 
+        p.x += p.vx + Math.sin(p.sw) * 0.8 * dpr; // 좌우 흔들림 폭(0.8) 상향
+        p.a += p.va;
+        
         if (p.y > H + 20 * dpr) Object.assign(p, mk(false));
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.globalAlpha = p.o;
+        
+        ctx.save(); 
+        ctx.translate(p.x, p.y); 
+        ctx.rotate(p.a); 
+        ctx.globalAlpha = p.o;
         ctx.fillStyle = '#f0c9c2';
-        ctx.beginPath(); ctx.ellipse(0, 0, p.r, p.r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); 
+        ctx.ellipse(0, 0, p.r, p.r * 0.62, 0, 0, Math.PI * 2); 
+        ctx.fill();
         ctx.restore();
       }
       if (!document.hidden) requestAnimationFrame(draw);

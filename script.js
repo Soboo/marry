@@ -26,7 +26,7 @@
   $('#greetingText').innerHTML = C.greeting.map(l => `<p>${esc(l)}</p>`).join('');
   const parentRow = (p, label) => {
     const names = [p.father, p.mother].filter(Boolean).map(esc).join(' · ');
-    return `<div class="row">${names ? `${names}<small>의 ${p.order}</small>` : `<small>${label}</small>`}<b>${esc(p.name)}</b></div>`;
+    return `<div class="row">${names ? `<span>${names}<small>의 ${p.order}</small></span>` : ''}<small>${label}</small><b>${esc(p.name)}</b></div>`;
   };
   $('#parents').innerHTML = parentRow(C.groom, '신랑') + parentRow(C.bride, '신부');
 
@@ -136,6 +136,25 @@
   $('#tmap').addEventListener('click', e => {
     if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) { e.preventDefault(); toast('티맵은 휴대폰에서 열 수 있어요'); }
   });
+  const mapEl = $('#map');
+  const mapFallback = () => {
+    mapEl.innerHTML = `<a class="map-fallback" href="${$('#naverMap').href}" target="_blank" rel="noopener">
+      <b>${esc(C.venue.name)}</b>${esc(C.venue.address)}<span>네이버 지도에서 보기 ›</span></a>`;
+  };
+  if (C.venue.naverMapKey && C.venue.lat) {
+    window.navermap_authFailure = mapFallback; // 키 오류·도메인 미등록 시
+    const s = document.createElement('script');
+    s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(C.venue.naverMapKey)}`;
+    s.onload = () => {
+      const pos = new naver.maps.LatLng(C.venue.lat, C.venue.lng);
+      const map = new naver.maps.Map(mapEl, { center: pos, zoom: 16, scrollWheel: false, zoomControl: true,
+        zoomControlOptions: { position: naver.maps.Position.TOP_RIGHT } });
+      new naver.maps.Marker({ position: pos, map,
+        icon: { content: `<div class="map-pin">${esc(C.venue.name)}</div>`, anchor: new naver.maps.Point(0, 0) } });
+    };
+    s.onerror = mapFallback;
+    document.head.appendChild(s);
+  } else mapFallback();
   $('#transport').innerHTML = C.venue.transport.map(t => `<div><dt>${esc(t.title)}</dt><dd>${esc(t.body).replace(/\n/g, '<br>')}</dd></div>`).join('');
 
   /* ---------- 계좌 ---------- */
@@ -232,6 +251,134 @@
       btn.disabled = false; btn.textContent = '전달하기';
     }
   });
+
+  /* ---------- 방명록 ---------- */
+  const GB_PAGE = 5;
+  const gbList = $('#gbList'), gbPager = $('#gbPager');
+  const gbModal = $('#gbModal'), gbForm = $('#gbForm'), gbErr = $('#gbError');
+  const gbDelModal = $('#gbDelModal'), gbDelForm = $('#gbDelForm'), gbDelErr = $('#gbDelError');
+  let gbPage = 1, gbDelId = null;
+  const device = (() => {
+    try {
+      let id = localStorage.getItem('gb-device');
+      if (!id) { id = crypto.randomUUID?.() || String(Math.random()).slice(2) + Date.now(); localStorage.setItem('gb-device', id); }
+      return id;
+    } catch { return ''; }
+  })();
+
+  // rsvpEndpoint 가 비어 있으면 화면 확인용으로 메모리에만 저장 (새로고침 시 사라짐)
+  const mock = [];
+  const gbApi = async (action, data = {}) => {
+    if (!C.rsvpEndpoint) {
+      await new Promise(r => setTimeout(r, 300));
+      const key = s => s.replace(/\s+/g, '').toLowerCase();
+      if (action === 'list') {
+        const live = mock.filter(m => !m.deleted).reverse(), pages = Math.max(1, Math.ceil(live.length / GB_PAGE));
+        const page = Math.min(Math.max(1, data.page), pages);
+        return { ok: true, page, pages, total: live.length, items: live.slice((page - 1) * GB_PAGE, page * GB_PAGE) };
+      }
+      if (action === 'create') {
+        if (mock.some(m => !m.deleted && (key(m.name) === key(data.name) || m.device === data.device)))
+          return { ok: false, message: '이미 작성하신 방명록이 있어요. 기존 글을 삭제한 뒤 다시 작성해주세요.' };
+        mock.push({ ...data, id: String(Date.now()), time: new Date().toISOString() });
+        return { ok: true };
+      }
+      const m = mock.find(m => m.id === data.id && !m.deleted);
+      if (!m || m.password !== data.password) return { ok: false, message: '비밀번호가 일치하지 않아요.' };
+      m.deleted = true;
+      return { ok: true };
+    }
+    const res = action === 'list'
+      ? await fetch(`${C.rsvpEndpoint}?action=guestbook&page=${data.page}`)
+      // text/plain 으로 보내면 CORS preflight 없이 Apps Script로 전달되고 응답도 읽을 수 있습니다.
+      : await fetch(C.rsvpEndpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ type: `guestbook.${action}`, ...data }) });
+    return res.json();
+  };
+
+  const fmtDate = iso => { const d = new Date(iso); return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`; };
+  const renderPager = (page, pages) => {
+    if (pages <= 1) { gbPager.innerHTML = ''; return; }
+    const start = Math.max(1, Math.min(page - 2, pages - 4)), end = Math.min(pages, start + 4);
+    let html = `<button data-page="${page - 1}" aria-label="이전 페이지" ${page === 1 ? 'disabled' : ''}>‹</button>`;
+    for (let i = start; i <= end; i++) html += `<button data-page="${i}" class="${i === page ? 'on' : ''}" ${i === page ? 'aria-current="page"' : ''}>${i}</button>`;
+    html += `<button data-page="${page + 1}" aria-label="다음 페이지" ${page === pages ? 'disabled' : ''}>›</button>`;
+    gbPager.innerHTML = html;
+  };
+  const loadGuestbook = async (page = gbPage) => {
+    try {
+      const r = await gbApi('list', { page });
+      if (!r.ok) throw new Error(r.error);
+      gbPage = r.page;
+      gbList.innerHTML = r.items.length ? r.items.map(it => `<li class="gb-item">
+          <header><b>${esc(it.name)}</b><time>${fmtDate(it.time)}</time>
+            <button class="gb-del" data-del="${esc(it.id)}" aria-label="${esc(it.name)}님의 글 삭제">삭제</button></header>
+          <p>${esc(it.content)}</p></li>`).join('')
+        : '<li class="gb-empty">첫 번째 축하 메시지를 남겨주세요.</li>';
+      renderPager(r.page, r.pages);
+    } catch {
+      gbList.innerHTML = '<li class="gb-empty">방명록을 불러오지 못했어요.</li>';
+      gbPager.innerHTML = '';
+    }
+  };
+  gbPager.addEventListener('click', e => {
+    const b = e.target.closest('[data-page]');
+    if (b) loadGuestbook(+b.dataset.page);
+  });
+
+  const sheetModal = (m, onClose) => {
+    const close = () => { m.hidden = true; document.body.style.overflow = ''; onClose(); };
+    $('.sheet-close', m).onclick = close;
+    m.addEventListener('click', e => { if (e.target === m) close(); });
+    return { open: () => { m.hidden = false; document.body.style.overflow = 'hidden'; }, close };
+  };
+  const gbW = sheetModal(gbModal, () => { gbErr.textContent = ''; });
+  const gbD = sheetModal(gbDelModal, () => { gbDelErr.textContent = ''; gbDelForm.reset(); });
+  $('#gbOpen').onclick = gbW.open;
+  gbForm.content.addEventListener('input', () => { $('#gbCount').textContent = `${gbForm.content.value.length} / 500`; });
+  gbList.addEventListener('click', e => {
+    const b = e.target.closest('[data-del]');
+    if (b) { gbDelId = b.dataset.del; gbD.open(); }
+  });
+
+  const submitting = async (btn, label, fn) => {
+    btn.disabled = true; btn.textContent = '처리 중...';
+    try { return await fn(); } finally { btn.disabled = false; btn.textContent = label; }
+  };
+  gbForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    gbErr.textContent = '';
+    const name = gbForm.name.value.trim(), content = gbForm.content.value.trim(), password = gbForm.password.value;
+    if (!name) return (gbErr.textContent = '이름을 입력해주세요.');
+    if (!content) return (gbErr.textContent = '내용을 입력해주세요.');
+    if (password.length < 4) return (gbErr.textContent = '비밀번호를 4자 이상 입력해주세요.');
+    await submitting($('#gbSubmit'), '등록하기', async () => {
+      try {
+        const r = await gbApi('create', { name, content: content.slice(0, 500), password, device });
+        if (!r.ok) return (gbErr.textContent = r.message || '등록에 실패했어요.');
+        gbForm.reset(); $('#gbCount').textContent = '0 / 500';
+        gbW.close();
+        toast('방명록이 등록되었습니다. 감사합니다!');
+        loadGuestbook(1);
+      } catch { gbErr.textContent = '등록에 실패했어요. 잠시 후 다시 시도해주세요.'; }
+    });
+  });
+  gbDelForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    gbDelErr.textContent = '';
+    const password = gbDelForm.password.value;
+    if (!password) return (gbDelErr.textContent = '비밀번호를 입력해주세요.');
+    await submitting($('#gbDelSubmit'), '삭제하기', async () => {
+      try {
+        const r = await gbApi('delete', { id: gbDelId, password });
+        if (!r.ok) return (gbDelErr.textContent = r.message || '삭제에 실패했어요.');
+        gbD.close();
+        toast('방명록이 삭제되었습니다.');
+        loadGuestbook();
+      } catch { gbDelErr.textContent = '삭제에 실패했어요. 잠시 후 다시 시도해주세요.'; }
+    });
+  });
+  loadGuestbook(1);
 
   /* ---------- 꽃잎 효과 ---------- */
   if (C.petals && !matchMedia('(prefers-reduced-motion: reduce)').matches) {

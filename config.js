@@ -3,8 +3,8 @@
  *  "TODO" 표시가 있는 항목은 실제 정보로 바꿔주세요.
  * ========================================================= */
 window.WEDDING = {
-  groom: { name: '김한용', father: '', mother: '', order: '아들' }, // TODO: 혼주 성함 (비우면 생략)
-  bride: { name: '배지영', father: '', mother: '', order: '딸' },   // TODO: 혼주 성함
+  groom: { name: '김한용', father: '김기주', mother: '정성분', order: '장남' }, // 혼주 성함 (비우면 생략)
+  bride: { name: '배지영', father: '배정길', mother: '김현진', order: '장녀' },
 
   // 예식 일시 (24시간제)
   date: { year: 2027, month: 2, day: 20, hour: 12, minute: 30 },
@@ -15,11 +15,15 @@ window.WEDDING = {
     address: '경기 안산시 단원구 중앙대로 829',
     tel: '',
     mapQuery: '안산 더루체웨딩홀',
+    lat: 37.3176, lng: 126.8282, // 지도 마커 좌표 (중앙대로 829)
+    // 네이버 지도 표시용 키 — NCP 콘솔 > Maps > Application 의 Client ID
+    // (Web 서비스 URL에 https://soboo.github.io 등록). 비우면 지도 대신 안내 카드가 보입니다.
+    naverMapKey: '', // TODO
     transport: [
-      { title: '지하철', body: '4호선 · 수인분당선 고잔역 1번 출구 바로 앞 (도보 약 1분)' },
+      { title: '지하철', body: '4호선 · 수인분당선 고잔역 1번 출구, 도보 약 10분' },
       { title: '버스', body: '고잔역 인근 정류장 하차 후 도보 이동\n노선은 위 지도 앱의 길찾기를 이용해주세요.' },
       { title: '자가용', body: '내비게이션에 "더루체웨딩홀" 또는 "중앙대로 829" 입력' },
-      { title: '주차', body: '건물 내 주차장 이용 · 하객 2시간 30분 무료\n(이후 30분당 600원)' }
+      { title: '주차', body: '건물 내 주차장 이용 또는 주변 공영주차장 이용\n주차요원의 안내에 따라서 주차 부탁드립니다.\n(하객 2시간 30분 무료, 이후 30분당 600원)' }
     ]
   },
 
@@ -36,24 +40,25 @@ window.WEDDING = {
   ],
 
   // 갤러리 사진 수 (images/gallery/01.jpg ~ NN.jpg)
-  galleryCount: 19,
+  galleryCount: 17,
 
   // 마음 전하실 곳 — 나중에 수정
   accounts: {
     groom: [
       { role: '신랑', name: '김한용', bank: '우리은행', number: '1002-561-589062' },
-      { role: '신랑 아버지', name: '', bank: '', number: '' },
-      { role: '신랑 어머니', name: '', bank: '', number: '' }
+      { role: '신랑 아버지', name: '김기주', bank: '농협', number: '006-12-224330' },
+      { role: '신랑 어머니', name: '정성분', bank: '농협', number: '006-12-144301' }
     ],
     bride: [
       { role: '신부', name: '배지영', bank: '우리은행', number: '1002-466-437760' },
-      { role: '신부 아버지', name: '', bank: '', number: '' },
-      { role: '신부 어머니', name: '', bank: '', number: '' }
+      { role: '신부 아버지', name: '배정길', bank: '기업은행', number: '287-278784-01-017' },
+      { role: '신부 어머니', name: '김현진', bank: '국민은행', number: '781601-00-048872' }
     ]
   },
 
-  // 참석 여부 응답을 받을 Google Apps Script 웹앱 URL (README 참고)
-  rsvpEndpoint: '', // 예: 'https://script.google.com/macros/s/XXXX/exec'
+  // 참석 여부·방명록을 받을 Google Apps Script 웹앱 URL (README 참고)
+  // 비워두면 방명록은 화면 확인용으로만 동작합니다 (새로고침 시 사라짐).
+  rsvpEndpoint: 'https://script.google.com/macros/s/AKfycbxWxB_DKdAjEmDLPQaLxeyIr5l6Vf20yEct5F2C3oT5vyvL-Xf_uDHktEQSDiGW2VXd/exec', // 예: 'https://script.google.com/macros/s/XXXX/exec'
 
   // 배경 꽃잎 효과
   petals: true

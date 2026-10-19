@@ -34,12 +34,6 @@
   <!-- 커버 -->
   <section class="cover">
     <div class="cover-photo"><img id="coverImg" alt="신랑 신부 웨딩 사진"></div>
-    <div class="cover-text">
-      <p class="eyebrow en">We are getting married</p>
-      <h1><span data-bind="groom"></span><i>&amp;</i><span data-bind="bride"></span></h1>
-      <p class="cover-date" data-bind="dateLong"></p>
-      <p class="cover-venue" data-bind="venueLine"></p>
-    </div>
     <div class="scroll-hint" aria-hidden="true"><span></span></div>
   </section>
 
@@ -81,10 +75,14 @@
     <p class="venue-name" data-bind="venueName"></p>
     <p class="venue-addr"><span data-bind="address"></span>
       <button class="copy-mini" data-copy-bind="address" aria-label="주소 복사">복사</button></p>
+    <div class="map" id="map"></div>
     <div class="map-buttons">
-      <a id="naverMap" target="_blank" rel="noopener"><span class="dot naver"></span>네이버 지도</a>
-      <a id="kakaoMap" target="_blank" rel="noopener"><span class="dot kakao"></span>카카오맵</a>
-      <a id="tmap" target="_blank" rel="noopener"><span class="dot tmap"></span>티맵</a>
+      <a id="naverMap" target="_blank" rel="noopener">
+        <svg class="app-ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#03c75a"/><path d="M7.5 6.5h3.2l2.8 4.3V6.5h3v11h-3.2l-2.8-4.3v4.3h-3z" fill="#fff"/></svg>네이버 지도</a>
+      <a id="kakaoMap" target="_blank" rel="noopener">
+        <svg class="app-ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#ffe300"/><path d="M12 4.5a5.5 5.5 0 0 0-5.5 5.5c0 4 5.5 9.5 5.5 9.5s5.5-5.5 5.5-9.5A5.5 5.5 0 0 0 12 4.5z" fill="#2a7cf6"/><circle cx="12" cy="10" r="2.1" fill="#ffe300"/></svg>카카오맵</a>
+      <a id="tmap" target="_blank" rel="noopener">
+        <svg class="app-ico" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="tmapG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff3e6c"/><stop offset=".55" stop-color="#7b4dff"/><stop offset="1" stop-color="#1fb4ff"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#tmapG)"/><path d="M6.5 7h11v3h-4v8h-3v-8h-4z" fill="#fff"/></svg>티맵</a>
     </div>
     <dl class="transport" id="transport"></dl>
   </section>
@@ -104,6 +102,16 @@
     <p class="muted">참석이 어려워 직접 축하를 전하지 못하는<br>분들을 위해 계좌번호를 기재하였습니다.</p>
     <div class="acc" id="accGroom"></div>
     <div class="acc" id="accBride"></div>
+  </section>
+
+  <!-- 방명록 -->
+  <section class="guestbook reveal">
+    <p class="eyebrow en">Guestbook</p>
+    <h2>방명록</h2>
+    <p class="muted">신랑, 신부의 결혼을 축하해주세요.</p>
+    <ul class="gb-list" id="gbList"></ul>
+    <nav class="gb-pager" id="gbPager" aria-label="방명록 페이지"></nav>
+    <button class="btn solid" id="gbOpen">방명록 작성하기</button>
   </section>
 
   <!-- 공유 -->
@@ -157,6 +165,36 @@
 
     <p class="form-error" id="formError" role="alert"></p>
     <button class="btn solid wide" type="submit" id="rsvpSubmit">전달하기</button>
+  </form>
+</div>
+
+<!-- 방명록 작성 모달 -->
+<div class="modal" id="gbModal" hidden>
+  <form class="sheet" id="gbForm" novalidate>
+    <button type="button" class="sheet-close" aria-label="닫기">×</button>
+    <h3>방명록 작성</h3>
+    <p class="muted small">신랑, 신부에게 축하의 마음을 남겨주세요.</p>
+    <label class="field"><span>이름</span>
+      <input name="name" type="text" maxlength="20" placeholder="이름을 입력해주세요" required autocomplete="name"></label>
+    <label class="field"><span>내용 <small id="gbCount">0 / 500</small></span>
+      <textarea name="content" rows="5" maxlength="500" placeholder="축하 메시지를 남겨주세요" required></textarea></label>
+    <label class="field"><span>비밀번호 <small>(글 삭제 시 필요 · 4~20자)</small></span>
+      <input name="password" type="password" minlength="4" maxlength="20" placeholder="비밀번호" required autocomplete="new-password"></label>
+    <p class="form-error" id="gbError" role="alert"></p>
+    <button class="btn solid wide" type="submit" id="gbSubmit">등록하기</button>
+  </form>
+</div>
+
+<!-- 방명록 삭제 모달 -->
+<div class="modal" id="gbDelModal" hidden>
+  <form class="sheet" id="gbDelForm" novalidate>
+    <button type="button" class="sheet-close" aria-label="닫기">×</button>
+    <h3>방명록 삭제</h3>
+    <p class="muted small">작성 시 입력한 비밀번호를 입력해주세요.</p>
+    <label class="field"><span>비밀번호</span>
+      <input name="password" type="password" maxlength="20" placeholder="비밀번호" required autocomplete="current-password"></label>
+    <p class="form-error" id="gbDelError" role="alert"></p>
+    <button class="btn solid wide" type="submit" id="gbDelSubmit">삭제하기</button>
   </form>
 </div>
 

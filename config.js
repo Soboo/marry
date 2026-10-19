@@ -38,9 +38,9 @@ window.WEDDING = {
   ],
 
   // 갤러리 사진 수 (images/gallery/01.jpg ~ NN.jpg)
-  galleryCount: 20,
+  galleryCount: 21,
 
-  // 마음 전하실 곳 — 나중에 수정
+  // 마음 전하실 곳
   accounts: {
     groom: [
       { role: '신랑', name: '김한용', bank: '우리은행', number: '1002-561-589062' },

@@ -3,22 +3,20 @@
  *  "TODO" 표시가 있는 항목은 실제 정보로 바꿔주세요.
  * ========================================================= */
 window.WEDDING = {
-  groom: { name: '김한용', father: '김기주', mother: '정성분', order: '장남' }, // 혼주 성함 (비우면 생략)
-  bride: { name: '배지영', father: '배정길', mother: '김현진', order: '장녀' },
+  groom: { name: '김한용', nameEn: 'Kim Hanyong', father: '김기주', mother: '정성분', order: '장남' }, // 혼주 성함 (비우면 생략)
+  bride: { name: '배지영', nameEn: 'Bae Jiyeong', father: '배정길', mother: '김현진', order: '장녀' },
 
   // 예식 일시 (24시간제)
   date: { year: 2027, month: 2, day: 20, hour: 12, minute: 30 },
 
   venue: {
     name: '더루체웨딩홀',
+    nameEn: 'The Luce, Ansan', // 커버 사진 위 영문 표기
     hall: '5층 헤리티지홀',
     address: '경기 안산시 단원구 중앙대로 829',
     tel: '',
     mapQuery: '안산 더루체웨딩홀',
-    lat: 37.3176, lng: 126.8282, // 지도 마커 좌표 (중앙대로 829)
-    // 네이버 지도 표시용 키 — NCP 콘솔 > Maps > Application 의 Client ID
-    // (Web 서비스 URL에 https://soboo.github.io 등록). 비우면 지도 대신 안내 카드가 보입니다.
-    naverMapKey: '', // TODO
+    kakaoPlaceId: '26801913', // 카카오맵 장소 ID (place.map.kakao.com/【이 숫자】)
     transport: [
       { title: '지하철', body: '4호선 · 수인분당선 고잔역 1번 출구, 도보 약 10분' },
       { title: '버스', body: '고잔역 인근 정류장 하차 후 도보 이동\n노선은 위 지도 앱의 길찾기를 이용해주세요.' },
@@ -59,6 +57,11 @@ window.WEDDING = {
   // 참석 여부·방명록을 받을 Google Apps Script 웹앱 URL (README 참고)
   // 비워두면 방명록은 화면 확인용으로만 동작합니다 (새로고침 시 사라짐).
   rsvpEndpoint: 'https://script.google.com/macros/s/AKfycbxWxB_DKdAjEmDLPQaLxeyIr5l6Vf20yEct5F2C3oT5vyvL-Xf_uDHktEQSDiGW2VXd/exec', // 예: 'https://script.google.com/macros/s/XXXX/exec'
+
+  // 배경음악 — music 폴더에 넣은 파일 경로 (비우면 음악 버튼이 사라집니다)
+  bgm: 'music/test.mp3',
+  bgmVolume: 0.2, // 배경음악 볼륨 (0 ~ 1)
+  bgmStart: 3,     // 음원 시작 위치 (초) — 앞부분을 건너뜁니다
 
   // 배경 꽃잎 효과
   petals: true

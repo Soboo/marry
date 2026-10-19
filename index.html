@@ -28,12 +28,36 @@
 </head>
 <body>
 <canvas id="petals" aria-hidden="true"></canvas>
+<button class="bgm" id="bgmBtn" type="button" aria-label="배경음악 켜기" aria-pressed="false" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6l10-2v11.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="6.5" cy="17.5" r="2.5" fill="currentColor"/><circle cx="16.5" cy="15.5" r="2.5" fill="currentColor"/>
+    <path class="bgm-off" d="M4 4l16 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+</button>
 
 <main class="card">
 
   <!-- 커버 -->
   <section class="cover">
     <div class="cover-photo"><img id="coverImg" alt="신랑 신부 웨딩 사진"></div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="flower" viewBox="0 0 24 24"><g fill="none" stroke="#fff" stroke-width="1.3">
+        <path d="M12 9.2c-1.6-2.6-.9-5.2 0-5.2s1.6 2.6 0 5.2zM14.7 11.1c2.9-1.1 5.3.3 5 1.1-.3.9-3 1.2-5-1.1zM13.7 14.3c1.9 2.4 1.7 5.1.8 5.4-.9.3-2.2-2.1-.8-5.4zM10.3 14.3c-1.4 3.3-3.9 3.5-4.6 2.8-.6-.7.9-2.9 4.6-2.8zM9.3 11.1c-2-2.3-.6-4.7.3-4.6.9.1 1.5 2.7-.3 4.6z"/>
+        <circle cx="12" cy="12" r="1.6"/></g></symbol>
+    </svg>
+    <div class="cover-text">
+      <div class="cover-top en">
+        <p data-bind="dateEn"></p>
+        <p data-bind="venueEn"></p>
+        <span class="cover-rule"></span>
+        <p data-bind="namesEn"></p>
+      </div>
+      <h1 class="cover-title en">We’re<br>Getting<br>Married!</h1>
+      <svg class="fl" style="left:12%;top:23%"><use href="#flower"/></svg>
+      <svg class="fl" style="right:13%;top:29%"><use href="#flower"/></svg>
+      <svg class="fl" style="left:16%;top:56%"><use href="#flower"/></svg>
+      <svg class="fl" style="left:10%;top:73%"><use href="#flower"/></svg>
+      <svg class="fl" style="right:9%;top:80%"><use href="#flower"/></svg>
+    </div>
     <div class="scroll-hint" aria-hidden="true"><span></span></div>
   </section>
 
@@ -75,7 +99,20 @@
     <p class="venue-name" data-bind="venueName"></p>
     <p class="venue-addr"><span data-bind="address"></span>
       <button class="copy-mini" data-copy-bind="address" aria-label="주소 복사">복사</button></p>
-    <div class="map" id="map"></div>
+    <!-- 카카오맵 지도 퍼가기 (map.kakao.com → 공유 → 지도 퍼가기) — 키 발급 없이 동작 -->
+    <div class="map" id="map">
+      <div id="daumRoughmapContainer1792408595788" class="root_daum_roughmap root_daum_roughmap_landing"></div>
+    </div>
+    <script charset="UTF-8" class="daum_roughmap_loader_script" src="https://t1.kakaocdn.net/kakaomapweb/roughmap/loader/prod/roughmapLoader.js"></script>
+    <script charset="UTF-8">
+      // 지도 폭 = 카드 폭(최대 480px) − 좌우 여백 56px
+      new daum.roughmap.Lander({
+        timestamp: '1792408595788',
+        key: '3j7jv9tdj4a',
+        mapWidth: String(Math.min(document.documentElement.clientWidth, 480) - 56),
+        mapHeight: '260'
+      }).render();
+    </script>
     <div class="map-buttons">
       <a id="naverMap" target="_blank" rel="noopener">
         <svg class="app-ico" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#03c75a"/><path d="M7.5 6.5h3.2l2.8 4.3V6.5h3v11h-3.2l-2.8-4.3v4.3h-3z" fill="#fff"/></svg>네이버 지도</a>

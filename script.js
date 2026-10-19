@@ -18,6 +18,9 @@
     dateShort: `${year}. ${pad(month)}. ${pad(day)}`,
     venueLine: `${C.venue.name} ${C.venue.hall}`.trim(),
     venueName: `${C.venue.name} ${C.venue.hall}`.trim(),
+    dateEn: `${wedding.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} at ${wedding.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`,
+    venueEn: C.venue.nameEn || C.venue.name,
+    namesEn: `${C.groom.nameEn || C.groom.name} & ${C.bride.nameEn || C.bride.name}`,
     address: C.venue.address
   };
   $$('[data-bind]').forEach(el => (el.textContent = binds[el.dataset.bind] ?? ''));
@@ -131,30 +134,11 @@
   /* ---------- 지도 / 교통 ---------- */
   const q = encodeURIComponent(C.venue.mapQuery || C.venue.name);
   $('#naverMap').href = `https://map.naver.com/p/search/${q}`; // 휴대폰에선 네이버 지도 앱/모바일웹으로 연결
-  $('#kakaoMap').href = `https://map.kakao.com/link/search/${q}`;
+  $('#kakaoMap').href = C.venue.kakaoPlaceId ? `https://place.map.kakao.com/${C.venue.kakaoPlaceId}` : `https://map.kakao.com/link/search/${q}`;
   $('#tmap').href = `tmap://search?name=${q}`;
   $('#tmap').addEventListener('click', e => {
     if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) { e.preventDefault(); toast('티맵은 휴대폰에서 열 수 있어요'); }
   });
-  const mapEl = $('#map');
-  const mapFallback = () => {
-    mapEl.innerHTML = `<a class="map-fallback" href="${$('#naverMap').href}" target="_blank" rel="noopener">
-      <b>${esc(C.venue.name)}</b>${esc(C.venue.address)}<span>네이버 지도에서 보기 ›</span></a>`;
-  };
-  if (C.venue.naverMapKey && C.venue.lat) {
-    window.navermap_authFailure = mapFallback; // 키 오류·도메인 미등록 시
-    const s = document.createElement('script');
-    s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(C.venue.naverMapKey)}`;
-    s.onload = () => {
-      const pos = new naver.maps.LatLng(C.venue.lat, C.venue.lng);
-      const map = new naver.maps.Map(mapEl, { center: pos, zoom: 16, scrollWheel: false, zoomControl: true,
-        zoomControlOptions: { position: naver.maps.Position.TOP_RIGHT } });
-      new naver.maps.Marker({ position: pos, map,
-        icon: { content: `<div class="map-pin">${esc(C.venue.name)}</div>`, anchor: new naver.maps.Point(0, 0) } });
-    };
-    s.onerror = mapFallback;
-    document.head.appendChild(s);
-  } else mapFallback();
   $('#transport').innerHTML = C.venue.transport.map(t => `<div><dt>${esc(t.title)}</dt><dd>${esc(t.body).replace(/\n/g, '<br>')}</dd></div>`).join('');
 
   /* ---------- 계좌 ---------- */
@@ -379,6 +363,79 @@
     });
   });
   loadGuestbook(1);
+
+  /* ---------- 배경음악 ---------- */
+  if (C.bgm) {
+    const START = Math.max(0, C.bgmStart || 0);
+    const btn = $('#bgmBtn'), audio = new Audio(START ? `${C.bgm}#t=${START}` : C.bgm);
+    const VOL = Math.min(1, Math.max(0, C.bgmVolume ?? 0.2)), FADE = 2.5; // 초
+    audio.preload = 'auto'; audio.volume = 0;
+    // 반복 재생도 START 지점부터 (audio.loop 은 항상 0초로 돌아가므로 직접 처리)
+    audio.addEventListener('loadedmetadata', () => { if (audio.currentTime < START) audio.currentTime = START; }, { once: true });
+    audio.addEventListener('ended', () => { audio.currentTime = START; audio.play().catch(() => {}); });
+    // 기본값은 '켜짐'. 끈 상태는 저장하지 않으므로 다시 들어오면 항상 켜진 상태로 시작합니다.
+    let off = false, ctx = null, gain = null, fadeTimer = 0;
+    // iOS 사파리는 audio.volume 을 무시하므로 Web Audio 로 볼륨을 조절합니다.
+    const setupGain = () => {
+      if (ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try {
+        ctx = new AC();
+        gain = ctx.createGain();
+        ctx.createMediaElementSource(audio).connect(gain).connect(ctx.destination);
+        audio.volume = 1;
+      } catch { ctx = gain = null; }
+    };
+    const fadeIn = () => {
+      if (gain) {
+        const t = ctx.currentTime;
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(VOL, t + FADE);
+      } else {
+        clearInterval(fadeTimer);
+        audio.volume = 0;
+        fadeTimer = setInterval(() => {
+          audio.volume = Math.min(VOL, audio.volume + VOL / (FADE * 20));
+          if (audio.volume >= VOL) clearInterval(fadeTimer);
+        }, 50);
+      }
+    };
+    const start = () => {
+      setupGain();
+      ctx?.resume().catch(() => {});
+      fadeIn();
+      return audio.play();
+    };
+    // 버튼은 실제 재생 여부가 아니라 '켜짐/꺼짐' 설정을 보여줍니다 (자동재생이 막혀 대기 중이어도 켜짐으로 표시)
+    const sync = () => {
+      const on = !off;
+      btn.setAttribute('aria-pressed', on);
+      btn.setAttribute('aria-label', on ? '배경음악 끄기' : '배경음악 켜기');
+    };
+    audio.addEventListener('play', () => btn.classList.add('playing'));
+    audio.addEventListener('pause', () => btn.classList.remove('playing'));
+    audio.addEventListener('error', () => { btn.hidden = true; console.warn(`[BGM] ${C.bgm} 파일을 불러오지 못했습니다.`); });
+    audio.addEventListener('canplay', () => { btn.hidden = false; }, { once: true });
+    // 브라우저는 소리 자동재생을 막기 때문에, 막히면 첫 터치/클릭 때 재생합니다.
+    const EVENTS = ['pointerdown', 'mousedown', 'touchend', 'click', 'keydown'];
+    const kick = e => {
+      if (e && btn.contains(e.target)) return;
+      EVENTS.forEach(t => removeEventListener(t, kick, true));
+      if (!off) start().catch(() => {});
+    };
+    if (!off) start().catch(() => EVENTS.forEach(t => addEventListener(t, kick, true)));
+    btn.onclick = () => {
+      off = !off;
+      if (off) audio.pause(); else start().catch(() => {});
+      sync();
+    };
+    sync();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) audio.pause(); else if (!off && audio.currentTime > 0) start().catch(() => {});
+    });
+  }
 
   /* ---------- 꽃잎 효과 ---------- */
   if (C.petals && !matchMedia('(prefers-reduced-motion: reduce)').matches) {

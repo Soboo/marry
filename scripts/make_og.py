@@ -1,6 +1,6 @@
 """카카오톡·문자 링크 미리보기 이미지(images/og.jpg)를 images/preview.jpeg 에서 만듭니다.
 
-- 1200x630 으로 맞춰 자르며, 세로 사진은 위에서 35% 지점을 중심으로 자릅니다 (얼굴이 잘리지 않게).
+- 1200x630 으로 맞춰 자르며, 세로 사진은 위에서 55% 지점을 중심으로 자릅니다.
 - index.html 의 og:image 주소 끝 ?v= 값을 이미지 내용 해시로 바꿔 카카오톡 캐시를 우회합니다.
 
 사용법: pip3 install pillow && python3 scripts/make_og.py
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'images' / 'preview.jpeg'
 OUT = ROOT / 'images' / 'og.jpg'
 HTML = ROOT / 'index.html'
-W, H, FOCUS = 1200, 630, 0.35
+W, H, FOCUS = 1200, 630, 0.55
 
 
 def main():

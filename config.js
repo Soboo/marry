@@ -38,7 +38,7 @@ window.WEDDING = {
   ],
 
   // 갤러리 사진 수 (images/gallery/01.jpg ~ NN.jpg)
-  galleryCount: 17,
+  galleryCount: 20,
 
   // 마음 전하실 곳 — 나중에 수정
   accounts: {

@@ -9,7 +9,8 @@ GitHub Pages용 정적 사이트입니다. 빌드 과정 없이 파일을 올리
 | `config.js` | **이름·날짜·장소·인사말·계좌 등 내용은 여기서만 수정** |
 | `images/` | **모든 사진을 이 폴더 하나에서 관리** (가로·세로 최대 1600px) |
 | `images/photos.json` | 갤러리 순서와 메인(커버) 사진 지정 |
-| `images/og.jpg` | 카카오톡/문자 공유 미리보기 이미지 (메인 사진에서 자동 생성) |
+| `images/preview.jpeg` | **카카오톡/문자 링크 미리보기 원본** — 이 파일만 바꿔서 push 하면 됩니다 |
+| `images/og.jpg` | 미리보기 이미지 (배포할 때 preview.jpeg 로 자동 생성 — 직접 수정하지 마세요) |
 | `admin.html` | 관리 페이지 — 사진 업로드/삭제/순서/메인 지정, 참석 응답 통계 |
 | `apps-script/Code.gs` | 응답을 구글 시트에 저장하는 스크립트 |
 
@@ -19,6 +20,10 @@ GitHub Pages용 정적 사이트입니다. 빌드 과정 없이 파일을 올리
 3. Settings → Pages → Source: `Deploy from a branch`, Branch: `main` / `(root)` → Save
 4. 1~2분 뒤 `https://<아이디>.github.io/wedding/` 에서 확인
 
+> **링크 미리보기 사진 바꾸기**: `images/preview.jpeg`를 새 사진으로 덮어쓰고 push 하면,
+> 배포 과정(`.github/workflows/deploy.yml`)에서 1200x630 `og.jpg`를 만들고 주소 뒤 `?v=` 값도 바꿔 카톡 캐시를 우회합니다.
+> 최초 1회: GitHub 저장소 **Settings → Pages → Source: GitHub Actions** 로 바꿔주세요.
+>
 > 카카오톡 미리보기(og 태그)는 `https://soboo.github.io/marry/` 기준 전체 주소로 설정돼 있습니다.
 > 저장소 이름이나 계정이 바뀌면 `index.html`의 `og:` 주소들과 `config.js`의 `shareUrl`을 함께 바꿔주세요.
 > 사진이나 문구를 바꿨는데 카톡 미리보기가 예전 그대로면, 카카오 개발자 사이트의
@@ -57,5 +62,5 @@ GitHub Pages용 정적 사이트입니다. 빌드 과정 없이 파일을 올리
 4. **저장하고 반영하기** → 저장소에 커밋 1개로 올라가고, 1~2분 뒤 청첩장에 반영
 
 - 사진은 브라우저에서 자동으로 1600px JPEG로 줄인 뒤 올라갑니다 (휴대폰 사진 회전도 자동 보정).
-- 메인 사진을 바꾸면 카카오톡 미리보기용 `og.jpg`도 자동으로 다시 만들어집니다.
+- 카카오톡 미리보기 사진은 메인 사진과 별개입니다. `images/preview.jpeg`를 바꿔주세요.
 - 토큰은 저장소에 저장되지 않고 그 브라우저에만 남습니다. 공용 PC에서는 '기억하기'를 끄고, 다 쓰면 '연결 해제'를 눌러주세요.

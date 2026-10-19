@@ -1,0 +1,47 @@
+# main 에 push 할 때마다 images/preview.jpeg 로 미리보기(og.jpg)를 만든 뒤 GitHub Pages 에 배포합니다.
+# 최초 1회: 저장소 Settings → Pages → Build and deployment → Source 를 "GitHub Actions" 로 변경
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 미리보기 이미지 생성
+        run: |
+          pip install pillow
+          python scripts/make_og.py
+
+      - name: 배포 파일 모으기
+        run: |
+          mkdir _site
+          rsync -a ./ _site/ --exclude .git --exclude .github --exclude _site \
+            --exclude scripts --exclude apps-script --exclude '.DS_Store' \
+            --exclude images/preview.jpeg --exclude images/after.jpeg --exclude 'images/KakaoTalk_*'
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4
